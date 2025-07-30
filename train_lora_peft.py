@@ -5,7 +5,13 @@ from peft import LoraConfig, get_peft_model
 
 
 def load_and_prepare_datasets():
-    ds1 = load_dataset("batterydata/battery-device-data-qa", split="train")
+    ds1_dict = load_dataset("batterydata/battery-device-data-qa")
+    if "train" in ds1_dict:
+        ds1 = ds1_dict["train"]
+    else:
+        # some versions of the dataset only provide a validation split
+        ds1 = ds1_dict[list(ds1_dict.keys())[0]]
+
     ds2 = load_dataset("avankumar/Battery_NER_70", split="train")
     ds3 = load_dataset("batterydata/paper-abstracts", split="train")
 
