@@ -19,6 +19,28 @@ The test data and testing code have been made open source.
 - 3.jsonl for Text Understanding
 - 4.jsonl for College Battery QA
 
+## Fine-Tuning with LoRA
+
+This repository now includes a simple example script `train_lora_peft.py` for
+parameter-efficient fine-tuning. The script downloads the following public
+datasets from Hugging Face and combines them for training:
+
+- `batterydata/battery-device-data-qa`
+- `avankumar/Battery_NER_70`
+- `batterydata/paper-abstracts`
+
+The script loads `mradermacher/Llama3-KALE-LM-Chem-8B-GGUF` and applies a LoRA
+adapter using the [PEFT](https://github.com/huggingface/peft) library. Basic
+training hyperparameters such as batch size, learning rate and LoRA settings can
+be configured via command line arguments. After training completes, the adapter
+weights are written to the directory specified by `--output_dir`.
+
+Usage example:
+
+```bash
+python train_lora_peft.py --output_dir ./adapter
+```
+
 ## Cite Our Work
 
 ```text
