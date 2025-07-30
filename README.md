@@ -33,7 +33,7 @@ datasets from Hugging Face and combines them for training:
   `validation` split. The training script will automatically fall back to this
   split if a `train` split is unavailable.
 
-The script loads `mradermacher/Llama3-KALE-LM-Chem-8B-GGUF` and applies a LoRA
+The script loads `USTC-KnowledgeComputingLab/Llama3-KALE-LM-Chem-8B` and applies a LoRA
 adapter using the [PEFT](https://github.com/huggingface/peft) library. Basic
 training hyperparameters such as batch size, learning rate and LoRA settings can
 be configured via command line arguments. After training completes, the adapter
