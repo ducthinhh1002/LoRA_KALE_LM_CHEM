@@ -29,6 +29,10 @@ datasets from Hugging Face and combines them for training:
 - `avankumar/Battery_NER_70`
 - `batterydata/paper-abstracts`
 
+  *Note:* some versions of `batterydata/battery-device-data-qa` only provide a
+  `validation` split. The training script will automatically fall back to this
+  split if a `train` split is unavailable.
+
 The script loads `mradermacher/Llama3-KALE-LM-Chem-8B-GGUF` and applies a LoRA
 adapter using the [PEFT](https://github.com/huggingface/peft) library. Basic
 training hyperparameters such as batch size, learning rate and LoRA settings can
