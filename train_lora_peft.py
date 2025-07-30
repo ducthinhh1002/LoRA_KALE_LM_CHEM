@@ -81,7 +81,10 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model_name", default="mradermacher/Llama3-KALE-LM-Chem-8B-GGUF")
+    parser.add_argument(
+        "--model_name",
+        default="USTC-KnowledgeComputingLab/Llama3-KALE-LM-Chem-8B",
+    )
     parser.add_argument("--output_dir", default="./lora_kale_lm_chem")
     parser.add_argument("--batch_size", type=int, default=2)
     parser.add_argument("--num_epochs", type=int, default=3)
