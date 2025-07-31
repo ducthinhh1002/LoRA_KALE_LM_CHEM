@@ -1,4 +1,5 @@
 import argparse
+import torch
 from datasets import load_dataset, concatenate_datasets
 from transformers import AutoTokenizer, AutoModelForCausalLM, DataCollatorForLanguageModeling, Trainer, TrainingArguments
 from peft import LoraConfig, get_peft_model
@@ -43,7 +44,13 @@ def main(args):
     dataset = dataset.map(tokenize_fn, batched=True)
     dataset.set_format(type="torch", columns=["input_ids", "attention_mask"])
 
-    model = AutoModelForCausalLM.from_pretrained(args.model_name, torch_dtype="auto", device_map="auto")
+    if torch.cuda.is_available():
+        model = AutoModelForCausalLM.from_pretrained(
+            args.model_name, torch_dtype="auto", device_map="auto"
+        )
+    else:
+        # avoid meta tensor errors when loading on CPU-only setups
+        model = AutoModelForCausalLM.from_pretrained(args.model_name, torch_dtype="auto")
 
     lora_config = LoraConfig(
         r=args.lora_rank,
@@ -55,12 +62,15 @@ def main(args):
     )
     model = get_peft_model(model, lora_config)
 
+    use_fp16 = torch.cuda.is_available()
+    if not use_fp16:
+        print("GPU not found. Disabling fp16 training")
     training_args = TrainingArguments(
         output_dir=args.output_dir,
         per_device_train_batch_size=args.batch_size,
         num_train_epochs=args.num_epochs,
         learning_rate=args.lr,
-        fp16=True,
+        fp16=use_fp16,
         logging_steps=50,
         save_steps=200,
         save_total_limit=2,
