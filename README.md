@@ -40,7 +40,9 @@ be configured via command line arguments. After training completes, the adapter
 weights are written to the directory specified by `--output_dir`.
 
 The script automatically disables fp16 mixed precision when no CUDA-capable GPU
-is detected, allowing CPU-only training environments to run without errors.
+is detected and loads the model directly on the CPU, allowing CPU-only training
+environments to run without errors.
+
 
 Usage example:
 

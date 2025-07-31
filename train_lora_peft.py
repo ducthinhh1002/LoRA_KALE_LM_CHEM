@@ -44,7 +44,13 @@ def main(args):
     dataset = dataset.map(tokenize_fn, batched=True)
     dataset.set_format(type="torch", columns=["input_ids", "attention_mask"])
 
-    model = AutoModelForCausalLM.from_pretrained(args.model_name, torch_dtype="auto", device_map="auto")
+    if torch.cuda.is_available():
+        model = AutoModelForCausalLM.from_pretrained(
+            args.model_name, torch_dtype="auto", device_map="auto"
+        )
+    else:
+        # avoid meta tensor errors when loading on CPU-only setups
+        model = AutoModelForCausalLM.from_pretrained(args.model_name, torch_dtype="auto")
 
     lora_config = LoraConfig(
         r=args.lora_rank,
