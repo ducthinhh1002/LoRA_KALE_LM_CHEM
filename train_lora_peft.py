@@ -1,8 +1,14 @@
 import argparse
+import os
 import torch
 from datasets import load_dataset, concatenate_datasets
 from transformers import AutoTokenizer, AutoModelForCausalLM, DataCollatorForLanguageModeling, Trainer, TrainingArguments
 from peft import LoraConfig, get_peft_model
+
+try:
+    import wandb  # optional dependency
+except ImportError:  # pragma: no cover - wandb is optional
+    wandb = None
 
 
 def load_and_prepare_datasets():
@@ -44,6 +50,11 @@ def main(args):
     dataset = dataset.map(tokenize_fn, batched=True)
     dataset.set_format(type="torch", columns=["input_ids", "attention_mask"])
 
+    if args.wandb_project and wandb is not None:
+        wandb.init(project=args.wandb_project, name=args.run_name)
+    elif args.wandb_project and wandb is None:
+        print("wandb is not installed. Proceeding without logging.")
+
     # Use a single loading path for both CPU and GPU setups. Loading with
     # ``device_map="auto"`` can create ``meta`` tensors which ``Trainer``
     # later tries to move with ``model.to(device)`` leading to the
@@ -76,6 +87,8 @@ def main(args):
         logging_steps=50,
         save_steps=200,
         save_total_limit=2,
+        report_to="wandb" if args.wandb_project else None,
+        run_name=args.run_name if args.wandb_project else None,
     )
 
     data_collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
@@ -105,5 +118,9 @@ if __name__ == "__main__":
     parser.add_argument("--lora_rank", type=int, default=16)
     parser.add_argument("--lora_alpha", type=int, default=16)
     parser.add_argument("--lora_dropout", type=float, default=0.05)
+    parser.add_argument("--wandb_project", type=str, default=None,
+                        help="Project name for Weights & Biases logging")
+    parser.add_argument("--run_name", type=str, default=None,
+                        help="Optional run name for wandb")
     args = parser.parse_args()
     main(args)

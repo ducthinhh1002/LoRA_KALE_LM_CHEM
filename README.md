@@ -50,6 +50,14 @@ Usage example:
 python train_lora_peft.py --output_dir ./adapter
 ```
 
+To log training metrics to [Weights & Biases](https://wandb.ai), specify a
+project name:
+
+```bash
+python train_lora_peft.py --output_dir ./adapter \
+  --wandb_project my-project --run_name lora-run
+```
+
 ## Cite Our Work
 
 ```text
