@@ -44,13 +44,15 @@ def main(args):
     dataset = dataset.map(tokenize_fn, batched=True)
     dataset.set_format(type="torch", columns=["input_ids", "attention_mask"])
 
-    if torch.cuda.is_available():
-        model = AutoModelForCausalLM.from_pretrained(
-            args.model_name, torch_dtype="auto", device_map="auto"
-        )
-    else:
-        # avoid meta tensor errors when loading on CPU-only setups
-        model = AutoModelForCausalLM.from_pretrained(args.model_name, torch_dtype="auto")
+    # Use a single loading path for both CPU and GPU setups. Loading with
+    # ``device_map="auto"`` can create ``meta`` tensors which ``Trainer``
+    # later tries to move with ``model.to(device)`` leading to the
+    # ``Cannot copy out of meta tensor`` error.  Instead, load the model on
+    # the CPU first and let ``Trainer`` handle moving it to the correct
+    # device.
+    model = AutoModelForCausalLM.from_pretrained(
+        args.model_name, torch_dtype="auto"
+    )
 
     lora_config = LoraConfig(
         r=args.lora_rank,
