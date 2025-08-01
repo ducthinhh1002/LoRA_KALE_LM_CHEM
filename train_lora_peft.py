@@ -2,13 +2,28 @@ import argparse
 import os
 import torch
 from datasets import load_dataset, concatenate_datasets
-from transformers import AutoTokenizer, AutoModelForCausalLM, DataCollatorForLanguageModeling, Trainer, TrainingArguments
+from transformers import (
+    AutoTokenizer,
+    AutoModelForCausalLM,
+    DataCollatorForLanguageModeling,
+    Trainer,
+    TrainingArguments,
+    TrainerCallback,
+)
 from peft import LoraConfig, get_peft_model
 
 try:
     import wandb  # optional dependency
 except ImportError:  # pragma: no cover - wandb is optional
     wandb = None
+
+
+class PrintLossCallback(TrainerCallback):
+    """A simple callback that prints training loss to stdout."""
+
+    def on_log(self, args, state, control, logs=None, **kwargs):
+        if logs is not None and "loss" in logs:
+            print(f"Step {state.global_step}: loss = {logs['loss']:.4f}")
 
 
 def load_and_prepare_datasets():
@@ -21,6 +36,7 @@ def load_and_prepare_datasets():
 
     ds2 = load_dataset("avankumar/Battery_NER_70", split="train")
     ds3 = load_dataset("batterydata/paper-abstracts", split="train")
+    ds4 = load_dataset("iamthomaspruyn/battery-electrolyte-qa", split="train")
 
     def normalize(example):
         if "question" in example and "answer" in example:
@@ -36,7 +52,8 @@ def load_and_prepare_datasets():
     ds1 = ds1.map(normalize)
     ds2 = ds2.map(normalize)
     ds3 = ds3.map(normalize)
-    return concatenate_datasets([ds1, ds2, ds3])
+    ds4 = ds4.map(normalize)
+    return concatenate_datasets([ds1, ds2, ds3, ds4])
 
 
 def main(args):
@@ -84,7 +101,7 @@ def main(args):
         num_train_epochs=args.num_epochs,
         learning_rate=args.lr,
         fp16=use_fp16,
-        logging_steps=50,
+        logging_steps=args.logging_steps,
         save_steps=200,
         save_total_limit=2,
         report_to="wandb" if args.wandb_project else None,
@@ -98,6 +115,7 @@ def main(args):
         args=training_args,
         train_dataset=dataset,
         data_collator=data_collator,
+        callbacks=[PrintLossCallback()],
     )
 
     trainer.train()
@@ -118,6 +136,8 @@ if __name__ == "__main__":
     parser.add_argument("--lora_rank", type=int, default=16)
     parser.add_argument("--lora_alpha", type=int, default=16)
     parser.add_argument("--lora_dropout", type=float, default=0.05)
+    parser.add_argument("--logging_steps", type=int, default=50,
+                        help="Steps between logging callbacks")
     parser.add_argument("--wandb_project", type=str, default=None,
                         help="Project name for Weights & Biases logging")
     parser.add_argument("--run_name", type=str, default=None,

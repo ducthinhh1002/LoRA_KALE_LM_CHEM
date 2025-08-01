@@ -28,6 +28,7 @@ datasets from Hugging Face and combines them for training:
 - `batterydata/battery-device-data-qa`
 - `avankumar/Battery_NER_70`
 - `batterydata/paper-abstracts`
+- `iamthomaspruyn/battery-electrolyte-qa`
 
   *Note:* some versions of `batterydata/battery-device-data-qa` only provide a
   `validation` split. The training script will automatically fall back to this
@@ -38,6 +39,9 @@ adapter using the [PEFT](https://github.com/huggingface/peft) library. Basic
 training hyperparameters such as batch size, learning rate and LoRA settings can
 be configured via command line arguments. After training completes, the adapter
 weights are written to the directory specified by `--output_dir`.
+
+Training loss is printed every few steps (controlled by `--logging_steps`) and
+can optionally be sent to Weights & Biases when a project name is provided.
 
 The script automatically disables fp16 mixed precision when no CUDA-capable GPU
 is detected and loads the model directly on the CPU, allowing CPU-only training
